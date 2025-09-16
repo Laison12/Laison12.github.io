@@ -1,10 +1,12 @@
 {
-  "name": "Laison12 PWA Demo",
-  "short_name": "Laison12",
-  "start_url": ".",
+  "name": "Rede Social Laison",
+  "short_name": "Laison",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0ea5a4",
+  "background_color": "#ffffff",
+  "theme_color": "#1a73e8",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icon-192.png",
