@@ -1,40 +1,22 @@
-<!doctype html>
-<html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-br">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Laison12 — PWA Demo</title>
-
-  <!-- Manifest + Theme -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rede Social Laison</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0ea5a4">
-
-  <!-- Ícone Apple Touch (pode trocar pelo seu arquivo se quiser) -->
-  <link rel="apple-touch-icon" href="icon-192.png">
-
-  <style>
-    :root{--bg:#0f172a;--accent:#0ea5a4;--muted:#94a3b8;
-      font-family:system-ui,Arial,Helvetica,sans-serif}
-    body{margin:0;display:flex;align-items:center;justify-content:center;
-      min-height:100vh;background:var(--bg);color:#e6eef6}
-    .card{max-width:600px;padding:24px;background:rgba(255,255,255,0.05);
-      border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
-    h1{margin-top:0;color:var(--accent)}
-    .btn{display:inline-block;margin-top:12px;padding:10px 16px;
-      background:var(--accent);color:#022;border-radius:8px;
-      font-weight:bold;text-decoration:none}
-    small{color:var(--muted)}
-  </style>
+  <meta name="theme-color" content="#1a73e8">
 </head>
 <body>
-  <div class="card">
-    <h1>Laison12 — PWA Exemplo</h1>
-    <p>Este site é um PWA simples em HTML + JS separado.  
-       Você pode instalar e até usar offline.</p>
-    <a class="btn" id="installBtn">Instalar PWA</a>
-    <p><small>Status: <span id="swStatus">Registrando...</span></small></p>
-  </div>
+  <h1>Bem-vindo à Rede Social Laison</h1>
 
-  <script src="app.js"></script>
+  <script src="script.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("Service Worker registrado!"))
+        .catch(err => console.error("Erro no SW:", err));
+    }
+  </script>
 </body>
 </html>
