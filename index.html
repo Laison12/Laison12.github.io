@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <!-- Cor do navegador -->
+  <meta name="theme-color" content="black" /> <!-- darkred -->
+
+  <!-- Manifest PWA -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Ícones do app -->
+  <link rel="icon" href="icon192.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="icon512.png" />
+
+  
+  
+  <link rel="stylesheet" href="style.css" type="text/css" media="all" />
+  <title>liaison</title>
+
+  <style>
+    /* Overlay de carregamento que cobre toda a tela */
+    #loadingOverlay {
+      display: none; /* ESCONDIDO INICIALMENTE */
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5); /* fundo semi-transparente escuro */
+      z-index: 9999; /* acima de tudo */
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Spinner circular dentro do overlay */
+    #loadingSpinner {
+      border: 8px solid #ccc;
+      border-top: 8px solid #555;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Estilo geral do formulário e inputs */
+    form {
+     width: 100%;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0px;
+      align-items: center;
+     
+    }
+    input[type="text"],
+    input[type="password"],
+    input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      
+    }
+    #imagePreview {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #555;
+    }
+    #submitBtn {
+      cursor: pointer;
+      padding: 8px 16px;
+    }
+    #submitBtn:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="box"></div>
+
+  <video autoplay muted loop>
+    <source src="fundo.mp4" type="video/mp4" />
+  </video>
+
+  <img src="laison2.png" alt="Logo" class="logo" />
+  
+  
+  
+  <a href="login.html" id="lik">login</a>
+
+  <div class="conteudo">
+    
+    
+    <form id="userForm" enctype="multipart/form-data" novalidate><br />
+   <img src="laison.png" alt="" /><br />
+      <!-- Input para imagem de perfil (oculto) -->
+      <input type="file" id="profileImage" accept="image/*" required style="display:none" />
+      <img id="imagePreview" src="perfil.png" alt="Imagem de perfil" title="Clique para selecionar foto" />
+
+      <!-- Nome do usuário -->
+      <input type="text" id="userName" placeholder="Digite o seu nome" required />
+
+      <!-- Senha do usuário -->
+      <input type="password" id="userPassword" placeholder="Digite a sua password" required />
+
+      <!-- Idade do usuário -->
+      <input type="text" id="userAge" placeholder="Digite a sua idade" required />
+
+      <!-- Gênero -->
+      <div>
+        <label for="masculino">
+          <input type="radio" id="masculino" name="genero" value="masculino" required /> Masculino
+        </label>
+        <label for="feminino">
+          <input type="radio" id="feminino" name="genero" value="feminino" /> Feminino
+        </label>
+      </div>
+
+      <!-- Sobre o usuário -->
+      <input type="text" id="userAbout" placeholder="Fala um pouco sobre você" />
+
+      <button type="submit" id="submitBtn">Enviar</button>
+    </form>
+  </div>
+
+<!-- Overlay de carregamento -->
+<div id="loadingOverlay">
+ <div id="loadingSpinner"></div>
+</div>
+
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getDatabase, ref, set, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDsP7lNqu-tDpJxpsyv8t1DW0M_u2EAE3o",
+      authDomain: "bartolomeu-cruz.firebaseapp.com",
+      databaseURL: "https://bartolomeu-cruz-default-rtdb.firebaseio.com",
+      projectId: "bartolomeu-cruz",
+      storageBucket: "bartolomeu-cruz.appspot.com",
+      messagingSenderId: "408863884951",
+      appId: "1:408863884951:web:13e8c2282139c1307dcbd2",
+      measurementId: "G-8TF4WLHKX3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const storage = getStorage(app);
+
+    const profileImageInput = document.getElementById('profileImage');
+    const imagePreview = document.getElementById('imagePreview');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Clique na imagem abre o seletor de arquivo
+    imagePreview.addEventListener('click', () => {
+      profileImageInput.click();
+    });
+
+    // Preview da imagem e armazenamento local
+    profileImageInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imagePreview.src = e.target.result;
+          localStorage.setItem('profilePic', e.target.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        imagePreview.src = 'perfil.png';
+        localStorage.removeItem('profilePic');
+      }
+    });
+
+    // Carrega a imagem salva localmente ao carregar a página
+    window.onload = () => {
+      const savedProfilePic = localStorage.getItem('profilePic');
+      if (savedProfilePic) {
+        imagePreview.src = savedProfilePic;
+      }
+    };
+
+    async function getUserIP() {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+      } catch (error) {
+        console.error('Erro ao obter IP:', error);
+        return null;
+      }
+    }
+
+    function updateOnlineStatus(isOnline) {
+      const username = localStorage.getItem('username');
+      if (!username) return;
+      const statusRef = ref(database, 'status/' + username);
+      set(statusRef, {
+        online: isOnline,
+        lastUpdated: new Date().toISOString()
+      });
+    }
+
+    window.addEventListener('online', () => updateOnlineStatus(true));
+    window.addEventListener('offline', () => updateOnlineStatus(false));
+
+    function storeUserDataLocally(name, password, age, about, gender, ip, profileImageURL) {
+      localStorage.setItem('username', name);
+      localStorage.setItem('password', password);
+      localStorage.setItem('age', age);
+      localStorage.setItem('about', about);
+      localStorage.setItem('gender', gender);
+      localStorage.setItem('userIP', ip);
+      localStorage.setItem('profileImageURL', profileImageURL);
+    }
+
+    document.getElementById('userForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const file = profileImageInput.files[0];
+      if (!file) {
+        alert('Por favor, selecione uma imagem de perfil antes de enviar.');
+        return;
+      }
+
+      loadingOverlay.style.display = 'flex'; // AQUI só aparece quando clica em enviar
+      submitBtn.disabled = true;
+
+      try {
+        const name = document.getElementById('userName').value.trim().toLowerCase();
+        const password = document.getElementById('userPassword').value;
+        const age = document.getElementById('userAge').value;
+        const about = document.getElementById('userAbout').value;
+        const gender = document.querySelector('input[name="genero"]:checked')?.value;
+
+        if (!gender) {
+          alert('Por favor, selecione um gênero.');
+          loadingOverlay.style.display = 'none';
+          submitBtn.disabled = false;
+          return;
+        }
+
+        const userRef = ref(database, gender + '/' + name);
+        const snapshot = await get(userRef);
+
+        if (snapshot.exists()) {
+          alert('Nome de usuário já existe. Por favor, escolha outro.');
+          loadingOverlay.style.display = 'none';
+          submitBtn.disabled = false;
+          return;
+        }
+
+        const userIP = await getUserIP();
+
+        let profileImageURL = null;
+        if (file) {
+          const imageRef = storageRef(storage, 'profile_images/' + name);
+          await uploadBytes(imageRef, file);
+          profileImageURL = await getDownloadURL(imageRef);
+        }
+
+        await set(userRef, {
+          username: name,
+          password: password,
+          age: age,
+          about: about,
+          gender: gender,
+          ip: userIP || "IP não disponível",
+          profileImageURL: profileImageURL || 'default_image_url'
+        });
+
+        storeUserDataLocally(name, password, age, about, gender, userIP, profileImageURL);
+        updateOnlineStatus(true);
+
+        window.location.href = 'home.html';
+
+      } catch (error) {
+        alert('Erro ao enviar os dados: ' + error.message);
+        loadingOverlay.style.display = 'none';
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+  
+  
+  
+  <!-- Seus scripts -->
+  <script src="main.js"></script>
+  <script src="script.js"></script>
+
+  <!-- Registro do Service Worker -->
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js")
+      .then(() => console.log("Service Worker registrado com sucesso!"))
+      .catch(err => console.log("Erro ao registrar Service Worker:", err));
+  }
+</script>
+
+</body>
+
+</html>

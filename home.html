@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>liaison</title>
+  <style>
+/* Fundo preto geral */
+body {
+  background-color: #000;
+  color: #ddd;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 10px;
+}
+
+/* Header com a imagem no topo, centralizada */
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+/* Logo menor e centralizado */
+header img {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Container da pesquisa abaixo da imagem */
+.search-container {
+  display: flex;
+  width: 100%;
+  max-width: 400px;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Input de pesquisa mais compacto */
+#searchInput {
+  flex-grow: 1;
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  border: 1px solid #555;
+  border-radius: 5px;
+  background-color: #222;
+  color: #ddd;
+  outline: none;
+}
+
+/* Botão "X" para limpar pesquisa */
+#clearSearch {
+  background-color: #333;
+  border: none;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #ddd;
+  transition: background-color 0.3s ease;
+}
+
+#clearSearch:hover {
+  background-color: #555;
+}
+
+/* Link "Pular" abaixo do input, com cor violeta */
+header > a {
+  margin-top: 10px;
+  color: darkred; /* violeta */
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  position: absolute;
+  top: 0rem;
+  right: 0.45rem;
+}
+
+header > a:hover {
+  text-decoration: underline;
+}
+
+/* Container geral da lista de usuários */
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 10px;
+}
+
+/* Cada usuário mais compacto */
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: #111;
+}
+
+/* Foto menor */
+.user-photo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #444;
+  cursor: pointer;
+}
+
+/* Nome do usuário menor e cor clara */
+.user-name {
+  flex-grow: 1;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #ddd;
+}
+
+/* Botão violeta */
+.user-item button.friend-button {
+  background-color: darkred; /* violeta */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: background-color 0.3s ease;
+}
+
+.user-item button.friend-button:hover:not(:disabled) {
+  background-color: darkred; /* violeta escuro */
+}
+
+/* Botão desabilitado (quando já é amigo) */
+.user-item button.friend-button:disabled {
+  background-color: #555;
+  cursor: default;
+}
+
+/* Animação de borda violeta quando adiciona amigo */
+.user-item.friend-added {
+  border-color: darkred !important; /* violeta claro */
+  animation: borderGlow 1.5s ease forwards;
+  box-shadow: 0 0 10px darkred;
+}
+
+@keyframes borderGlow {
+  0% {
+    box-shadow: 0 0 0px darkred;
+  }
+  50% {
+    box-shadow: 0 0 12px darkred;
+  }
+  100% {
+    box-shadow: 0 0 0px darkred;
+  }
+}
+
+/* Spinner (loading) permanece igual, mas cor modificada */
+.loading-text {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.spinner {
+  border: 5px solid #222;
+  border-top: 5px solid darkred;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Modal de mini perfil */
+#profileModal {
+  display: none; /* oculto inicialmente */
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  justify-content: center;
+  align-items: center;
+}
+
+#profileModal.active {
+  display: flex;
+}
+
+#profileModal .modal-content {
+  background: #111;
+  border-radius: 10px;
+  padding: 20px 25px;
+  max-width: 320px;
+  width: 90%;
+  box-shadow: 0 0 12px rgba(220, 40, 80, 0.7);
+  
+  position: relative;
+  text-align: center;
+  color: #ddd;
+}
+
+#profileModal .modal-content img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
+  border: 3px solid darkred;
+}
+
+#profileModal .modal-content h2 {
+  margin: 10px 0 5px 0;
+  font-size: 1.3rem;
+  color: #ddd;
+}
+
+#profileModal .modal-content p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: #bbb;
+}
+
+#profileModal .close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+}
+
+#profileModal .close-btn:hover {
+  color: darkred;
+}
+
+  </style>
+</head>
+
+<body>
+  <header>
+    <img src="laison2.png" alt="Logo" />
+    <br /><br /><br />
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Pesquisar usuário..." oninput="filterUsers()" />
+      <button id="clearSearch" onclick="clearSearch()">X</button>
+    </div>
+    <a href="liaison.html">Pular</a>
+  </header>
+
+  <div id="userList" class="user-list">
+    <div class="loading-text">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <!-- Modal mini perfil -->
+  <div id="profileModal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeProfileModal()">&times;</span>
+      <img id="modalProfilePhoto" src="img/user.png" alt="Foto do usuário" />
+      <h2 id="modalProfileName">Nome do Usuário</h2>
+      <p id="modalProfileAge">Idade: N/A</p>
+      <p id="modalProfileGender">Gênero: N/A</p>
+      <p id="modalProfileAbout">Sobre: Sem descrição</p>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getDatabase, ref, get, set } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+    import { getStorage, ref as storageRef, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDsP7lNqu-tDpJxpsyv8t1DW0M_u2EAE3o",
+      authDomain: "bartolomeu-cruz.firebaseapp.com",
+      databaseURL: "https://bartolomeu-cruz-default-rtdb.firebaseio.com",
+      projectId: "bartolomeu-cruz",
+      storageBucket: "bartolomeu-cruz.appspot.com",
+      messagingSenderId: "408863884951",
+      appId: "1:408863884951:web:13e8c2282139c1307dcbd2",
+      measurementId: "G-8TF4WLHKX3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const storage = getStorage(app);
+
+    let currentUser = localStorage.getItem('username');
+
+    // Guarda amigos do usuário atual para consulta rápida
+    let currentUserFriends = new Set();
+
+    // Função para carregar amigos do usuário logado
+    async function loadCurrentUserFriends() {
+      if (!currentUser) return;
+
+      const friendsRef = ref(database, `amigos/${currentUser}`);
+      const snapshot = await get(friendsRef);
+      if (snapshot.exists()) {
+        const friendsObj = snapshot.val();
+        currentUserFriends = new Set(Object.keys(friendsObj));
+      } else {
+        currentUserFriends = new Set();
+      }
+    }
+
+    // Função para abrir o modal com dados do usuário
+    function openProfileModal(user) {
+      document.getElementById('modalProfilePhoto').src = user.photo || 'img/user.png';
+      document.getElementById('modalProfileName').textContent = user.username || 'Usuário Desconhecido';
+      document.getElementById('modalProfileAge').textContent = 'Idade: ' + (user.age || 'N/A');
+      document.getElementById('modalProfileGender').textContent = 'Gênero: ' + (user.gender || 'N/A');
+      document.getElementById('modalProfileAbout').textContent = 'Sobre: ' + (user.about || 'Sem descrição');
+
+      document.getElementById('profileModal').classList.add('active');
+    }
+
+    window.closeProfileModal = () => {
+      document.getElementById('profileModal').classList.remove('active');
+    };
+
+    // Função para carregar usuários
+    const loadUsers = async () => {
+      const userListDiv = document.getElementById('userList');
+      userListDiv.innerHTML = ''; // limpa spinner
+
+      await loadCurrentUserFriends();
+
+      const usersRefs = [ref(database, 'masculino/'), ref(database, 'feminino/')];
+
+      try {
+        for (let usersRef of usersRefs) {
+          const snapshot = await get(usersRef);
+          if (snapshot.exists()) {
+            const users = snapshot.val();
+
+            for (const userKey of Object.keys(users)) {
+              const user = users[userKey];
+              const username = user.username || 'Usuário Desconhecido';
+
+              // Pula mostrar ele mesmo
+              if (currentUser && username === currentUser) continue;
+
+              const imageRef = storageRef(storage, 'profile_images/' + username);
+              let profileImageUrl = 'img/user.png'; // padrão
+
+              try {
+                profileImageUrl = await getDownloadURL(imageRef);
+              } catch (error) {
+                // console.warn('Erro ao carregar imagem de perfil:', error);
+              }
+
+              const isFriend = currentUserFriends.has(username);
+
+              const userDiv = document.createElement('div');
+              userDiv.classList.add('user-item');
+              userDiv.dataset.username = username.toLowerCase();
+
+              userDiv.innerHTML = `
+                <img src="${profileImageUrl}" alt="Foto de ${username}" class="user-photo" />
+                <span class="user-name">${username}</span>
+                <button
+                  class="friend-button"
+                  ${isFriend ? 'disabled' : ''}
+                  onclick="addFriend('${userKey}', '${username}', this)"
+                >
+                  ${isFriend ? 'Já é seu amigo' : 'Adicionar como amigo'}
+                </button>
+              `;
+
+              // Evento para abrir modal ao clicar na foto
+              const imgElem = userDiv.querySelector('.user-photo');
+              imgElem.addEventListener('click', () => {
+                openProfileModal({
+                  username,
+                  age: user.age,
+                  gender: user.gender,
+                  about: user.about,
+                  photo: profileImageUrl
+                });
+              });
+
+              userListDiv.appendChild(userDiv);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar os usuários:", error);
+        userListDiv.innerHTML = "<p>Erro ao carregar a lista de usuários.</p>";
+      }
+    };
+
+    // Função para adicionar amigo com feedback visual
+    window.addFriend = async (userKey, friendUsername, buttonElem) => {
+      if (!currentUser) {
+        alert("Você precisa estar logado para adicionar amigos.");
+        return;
+      }
+
+      // Se já for amigo, não faz nada
+      if (currentUserFriends.has(friendUsername)) {
+        return;
+      }
+
+      try {
+        await set(ref(database, `amigos/${currentUser}/${friendUsername}`), true);
+        await set(ref(database, `amigos/${friendUsername}/${currentUser}`), true);
+
+        // Atualiza lista local
+        currentUserFriends.add(friendUsername);
+
+        // Atualiza botão UI
+        buttonElem.disabled = true;
+        buttonElem.textContent = 'Já é seu amigo';
+        buttonElem.classList.add('friend-button');
+
+        // Anima borda verde no container do usuário
+        const userItemDiv = buttonElem.closest('.user-item');
+        userItemDiv.classList.add('friend-added');
+
+        // Remove a animação depois de 1.5s para poder repetir se quiser
+        setTimeout(() => {
+          userItemDiv.classList.remove('friend-added');
+        }, 1500);
+
+      } catch (error) {
+        console.error("Erro ao adicionar amigo:", error);
+      }
+    };
+
+    // Normaliza texto para filtro
+    const normalizeText = (text) => {
+      return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    };
+
+    window.filterUsers = () => {
+      const searchValue = normalizeText(document.getElementById("searchInput").value);
+      const userItems = document.querySelectorAll(".user-item");
+
+      userItems.forEach((item) => {
+        const userName = normalizeText(item.dataset.username);
+        item.style.display = userName.includes(searchValue) ? "flex" : "none";
+      });
+    };
+
+    window.clearSearch = () => {
+      document.getElementById("searchInput").value = "";
+      filterUsers();
+    };
+
+    window.onload = loadUsers;
+  </script>
+</body>
+
+</html>

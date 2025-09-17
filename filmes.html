@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="liaison.css" type="text/css" media="all" />
+  <title>Laison</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: black;
+      color: white;
+      margin: 0;
+      
+      height: 100vh;
+      
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 2em;
+      text-shadow: 2px 2px 8px #000;
+    }
+
+    .controls {
+      margin: 20px 0;
+    }
+
+    button, input[type="text"] {
+      padding: 10px 15px;
+      font-size: 16px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      transition: all 0.3s ease-in-out;
+    }
+
+    button {
+      background-color: darkred;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: darkred;
+      transform: translateY(-2px);
+    }
+
+    input[type="text"] {
+      width: 250px;
+      background-color: #2c2c2c;
+      color: white;
+    }
+
+    .carousel-container {
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 20px;
+      scroll-behavior: smooth;
+    }
+
+    .movie {
+      display: inline-block;
+      vertical-align: top;
+      background: rgba(255, 255, 255, 0.05);
+      margin: 10px;
+      padding: 10px;
+      border-radius: 15px;
+      width: 200px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      transition: transform 0.3s, box-shadow 0.3s;
+      text-align: center;
+    }
+
+    .movie:hover {
+      transform: scale(1.1);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    .movie img {
+      width: 100%;
+      border-radius: 10px;
+      transition: transform 0.3s;
+    }
+
+.movie h3 {
+  font-size: 16px;
+  margin: 10px 0 5px;
+  word-wrap: break-word;
+  overflow: hidden;
+  max-height: auto;
+  /* Limita a duas linhas */
+}
+
+    .movie p {
+      font-size: 14px;
+      color: #ccc;
+      height: 60px;
+      overflow: hidden;
+    }
+
+    .movie span {
+      display: block;
+      margin-top: 5px;
+      font-size: 13px;
+      color: #aaa;
+    }
+
+    .movie-container::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .movie-container::-webkit-scrollbar-thumb {
+      background: #03a9f4;
+      border-radius: 4px;
+    }
+    #yuyu{
+      width: 12rem;
+      height: 5rem;
+    }
+    input, button{
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  
+  <header>
+      <img src="laison2.png" id="logo" alt="Logo" />
+      
+      <div id="imagemHade" title="Publicar">
+          
+          
+          
+          
+          
+       
+      </div>
+      
+      <br />
+      <div class="menu">
+          <a href="liaison.html" id="a"><img src="home.png" alt="" /></a>
+          
+          <a href="home.html"><img src="amigos.png" alt="" /></a>
+          
+          <a href="filmes.html"><img src="video.png" alt="" /></a>
+          
+          
+          <a href="chat.html" id="a"><img src="mensagem.png" alt="" /></a>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="procurar.html"><img src="search.png" alt="" /></a>
+          
+          
+      </div>
+  </header>
+<br /><br /><br />
+<br /><br /><br />
+<br /><br /><br />
+<center>
+  <div class="controls">
+    <input type="text" id="buscaTexto" placeholder="Digite o nome do filme" />
+    <button onclick="buscarPorTexto()">Buscar</button>
+    <button onclick="iniciarBusca()">Falar</button>
+    <button onclick="limparFilmes()">Limpar</button>
+  </div>
+</center>
+  <div class="carousel-container" id="filmes"></div>
+
+  <script>
+    const apiKey = 'f5a1d43948a6c7361536ebaf00db0f5a';
+    const filmesContainer = document.getElementById('filmes');
+
+    function iniciarBusca() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert('Reconhecimento de voz não suportado neste navegador.');
+        return;
+      }
+
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = 'pt-BR';
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        const query = event.results[0][0].transcript;
+        buscarFilme(query);
+      };
+
+      recognition.onerror = function(event) {
+        console.error('Erro no reconhecimento de voz:', event.error);
+      };
+    }
+
+    function buscarPorTexto() {
+      const texto = document.getElementById('buscaTexto').value.trim();
+      if (texto) {
+        buscarFilme(texto);
+      }
+    }
+
+    async function buscarFilme(titulo) {
+      filmesContainer.innerHTML = "<p>Buscando...</p>";
+      try {
+        const resposta = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(titulo)}&language=pt-BR`);
+        const dados = await resposta.json();
+        mostrarFilmes(dados.results);
+      } catch (erro) {
+        console.error('Erro ao buscar filme:', erro);
+        filmesContainer.innerHTML = "<p>Erro ao buscar filme.</p>";
+      }
+    }
+
+    function mostrarFilmes(filmes) {
+      filmesContainer.innerHTML = '';
+      if (!filmes.length) {
+        filmesContainer.innerHTML = "<p>Nenhum filme encontrado.</p>";
+        return;
+      }
+      filmes.forEach(filme => {
+        const div = document.createElement('div');
+        div.className = 'movie';
+        div.innerHTML = `
+          <img src="https://image.tmdb.org/t/p/w500${filme.poster_path}" alt="${filme.title}" />
+          <h3>${filme.title}</h3>
+          <p>${filme.overview || 'Sem descrição disponível.'}</p>
+          <span>Ano: ${filme.release_date ? filme.release_date.split('-')[0] : 'Desconhecido'}</span>
+          <span>Nota: ${filme.vote_average || 'N/A'}</span>
+        `;
+        filmesContainer.appendChild(div);
+      });
+    }
+
+    function limparFilmes() {
+      filmesContainer.innerHTML = '';
+      document.getElementById('buscaTexto').value = '';
+    }
+  </script>
+</body>
+</html>

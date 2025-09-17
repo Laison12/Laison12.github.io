@@ -1,0 +1,192 @@
+body {
+    font-size: 15pt;
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+    font-size: 14px;
+    font-family: 'Times New Roman', Times, serif;
+
+}
+header{
+      position: absolute;
+    top: 2rem;
+    left: 2.5rem;
+}
+        body {
+            margin: 0;
+            overflow: hidden; /* Impede a barra de rolagem */
+        }
+
+        video {
+            position: fixed; /* Posiciona o vídeo no fundo */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ajusta o vídeo para cobrir toda a tela */
+            z-index: -1; /* Coloca o vídeo atrás do conteúdo */
+        }
+
+        .conteudo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            text-align: center;
+            font-size: 2em;
+        }
+        .box{
+          width: 100%;
+          height: 100vh;
+          position: absolute;
+          top: 0vh;
+          background: rgba(0, 0, 0, 0.5);
+        }
+        
+        
+        
+        
+        
+        
+        form{
+  width: 100%;
+border-radius: 20px;  
+  background: rgba(0, 0, 0, 0.5);
+  height: auto;
+  
+  color: white;
+  font: 1rem;
+  padding: 0.90rem;
+  margin-top: 1rem;
+  border: 1px solid white;
+}
+a{
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 1rem;
+  color: red;
+}
+form img{
+  width: 5rem;
+  
+  height: 1.5rem;
+}
+input{
+  margin-top: 0.5rem;
+  background: none;
+  color: white;
+}
+#nome{
+  padding: 1rem;
+  border-top: none;
+border-left: none;
+border-right: none;
+border-bottom: 1px solid darkred;
+}
+input{
+  border-bottom: 1px solid darkred;
+padding: 1rem;
+border-top: none;
+border-left: none;
+border-right: none;
+}
+#masculino{
+  border: 1px solid darkred;
+  border-radius: 50%;
+  outline: none;
+  color: darkred;
+  background: darkred;
+}
+input{
+  outline: none;
+}
+button{
+  width: 70%;
+  margin-top: 1rem;
+  padding: 0.4rem;
+  border-radius: 10px;
+  color: white;
+  background: darkred;
+  border: none;
+}
+    #profileImage {
+      display: none; /* Oculta o input file */
+    }
+
+    #imagePreview {
+      cursor: pointer; /* Indica que a imagem é clicável */
+      width: 4rem;
+      height: 4rem;
+      border-radius: 50%;
+      margin-top: 10px;
+      border: darkred 1px solid;
+    }
+    form img{
+      
+    }
+header{
+      position: absolute;
+    top: 2rem;
+    left: 2.5rem;
+}
+        body {
+            margin: 0;
+            overflow: hidden; /* Impede a barra de rolagem */
+        }
+
+        video {
+            position: fixed; /* Posiciona o vídeo no fundo */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ajusta o vídeo para cobrir toda a tela */
+            z-index: -1; /* Coloca o vídeo atrás do conteúdo */
+        }
+
+        .conteudo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            text-align: center;
+            font-size: 2em;
+        }
+        .box{
+          width: 100%;
+          height: 100vh;
+          position: absolute;
+          top: 0vh;
+          background: rgba(0, 0, 0, 0.5);
+        }
+        label{
+          font-size: 0.5rem;
+        }
+      .logo{
+        width: 10rem;
+       top: 1vh;
+       height: 2.5rem;
+       position: absolute;
+left: 0.5rem;
+
+      }
+#lik{
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  color: wh;
+  cursor: pointer;
+}
+
+
+
+
+
+
+
+
+
+
+
+

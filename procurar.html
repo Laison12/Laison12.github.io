@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laison</title>
+    <link rel="stylesheet" href="liaison.css" type="text/css" media="all" />
+    <style>
+    input{
+      overflow: hidden;
+      outline: none;
+    }
+        
+        .carousel-container {
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            height: 60vh;
+            gap: 20px;
+            padding: 0;
+            scroll-behavior: smooth;
+        }
+        .news-item {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            transition: transform 0.3s;
+        }
+        .news-item:hover {
+            transform: scale(1.05);
+        }
+        .news-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .news-item .content {
+            padding: 15px;
+        }
+        .news-item h3 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            color: #333;
+        }
+        .news-item p {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .news-item a {
+            text-decoration: none;
+            color: #1a73e8;
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 20px;
+        }
+        footer {
+            position: absolute;
+            top: 90vh;
+            height: 10vh;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+        footer img {
+            width: 2rem;
+            height: 2rem;
+            margin-top: 1rem;
+        }
+        .search-container {
+            
+        }
+        input {
+            padding: 0rem;
+            border: none;
+            width: 60%;
+            padding: 12px;
+            border-radius: 10px;
+        }
+        button {
+            background: darkred;
+            border: none;
+        }
+        button img {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 20px;
+            background: white;
+        }
+        #branco{
+            background: white;
+        }
+    </style>
+
+</head>
+<body>
+
+  <header>
+      <img src="laison2.png" id="logo" alt="Logo" />
+      
+      <div id="imagemHade" title="Publicar">
+          
+          
+          
+          
+          
+          <img id="profile-pic" src="profile.png" alt="Foto de Perfil" />
+       
+      </div>
+      
+      <br />
+      <div class="menu">
+          <a href="liaison.html" id="a"><img src="home.png" alt="" /></a>
+          
+          <a href="home.html"><img src="amigos.png" alt="" /></a>
+          
+          <a href="filmes.html"><img src="video.png" alt="" /></a>
+          
+          
+          <a href="chat.html" id="a"><img src="mensagem.png" alt="" /></a>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="procurar.html"><img src="search.png" alt="" /></a>
+          
+      </div>
+  </header>
+<br /><br /><br /><br /><br /><br /><br /><br />
+<main>
+    <center>
+    <div class="search-container">
+        <input type="text" id="searchQuery" placeholder="Pesquise por notícias..." />
+        <button onclick="searchNews()">
+          search</button>
+    </div>
+    </center>
+    <div id="newsContainer" class="carousel-container">
+        <div class="loading"></div>
+    </div>
+</main>
+
+
+<script>
+const apiKey = '66b0383a4983b131569e8a3b6effd782';
+const apiUrl = 'https://gnews.io/api/v4/search'; // API para pesquisa de notícias
+
+const newsContainer = document.getElementById('newsContainer');
+
+// Função para exibir as notícias
+function displayNews(news) {
+  newsContainer.innerHTML = ''; // Limpa as notícias anteriores
+
+  if (news.length === 0) {
+    newsContainer.innerHTML = '<p>Sem notícias disponíveis para essa pesquisa.</p>';
+    return;
+  }
+
+  news.forEach(article => {
+    const newsItem = document.createElement('div');
+    newsItem.classList.add('news-item');
+    newsItem.innerHTML = `
+            <img src="${article.image || 'https://via.placeholder.com/300x200'}" alt="Imagem da notícia">
+            <div class="content">
+                <h3>${article.title}</h3>
+                <p>${article.description || 'Sem descrição disponível'}</p>
+                <a href="${article.url}" target="_blank">Leia mais</a>
+            </div>
+        `;
+    newsContainer.appendChild(newsItem);
+  });
+}
+
+// Função para buscar notícias e armazenar no localStorage
+async function searchNews() {
+  const query = document.getElementById('searchQuery').value.trim();
+
+  if (!query) {
+    alert('Por favor, digite um termo de pesquisa.');
+    return;
+  }
+
+  const url = `${apiUrl}?q=${encodeURIComponent(query)}&lang=pt&token=${apiKey}&max=100`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.articles && data.articles.length > 0) {
+      // Recupera a lista de pesquisas anteriores ou cria uma nova lista
+      let previousSearches = JSON.parse(localStorage.getItem('searchQueries')) || [];
+
+      // Adiciona o novo tema à lista
+      previousSearches.push(query);
+
+      // Armazena a lista atualizada de pesquisas no localStorage
+      localStorage.setItem('searchQueries', JSON.stringify(previousSearches));
+
+      displayNews(data.articles);
+    } else {
+      newsContainer.innerHTML = '<p>Não foram encontradas notícias para esse termo.</p>';
+    }
+  } catch (error) {
+    console.error('Erro ao buscar as notícias:', error);
+    newsContainer.innerHTML = '<p>Erro ao carregar as notícias. Tente novamente mais tarde.</p>';
+  }
+}
+
+// Função para carregar todas as pesquisas anteriores do localStorage
+function loadPreviousSearches() {
+  const previousSearches = JSON.parse(localStorage.getItem('searchQueries')) || [];
+
+  if (previousSearches.length > 0) {
+    previousSearches.forEach(query => {
+      console.log('Pesquisa anterior:', query); // Exibe no console ou pode fazer algo com isso
+    });
+  }
+}
+
+// Função para carregar as notícias baseadas no último termo armazenado
+function loadStoredNews() {
+  const searchQuery = localStorage.getItem('searchQuery');
+  if (searchQuery) {
+    document.getElementById('searchQuery').value = searchQuery;
+    searchNews(); // Realiza a busca automática ao carregar a página
+  }
+}
+
+// Carregar as notícias e as pesquisas anteriores ao iniciar a página
+window.onload = function() {
+  loadStoredNews();
+  loadPreviousSearches();
+};
+</script>
+
+</body>
+</html>

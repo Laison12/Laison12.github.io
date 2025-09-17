@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css" type="text/css" media="all" />
+  <title>Liaison</title>
+</head>
+
+<body>
+  <div class="box"></div>
+    <video autoplay muted loop>
+        <source src="fundo.mp4" type="video/mp4">
+
+    </video>
+   <img src="laison2.png" alt="" / class="logo">   
+  <a href="index.html" id="lik">Sing-up</a>
+  
+  
+  
+    <div class="conteudo">
+
+  <center>
+ 
+    <form id="loginForm">
+      <br /><br />
+      <img src="laison.png" alt="" />
+        
+    <center>
+   
+      <div>
+        
+   <input type="text" id="userName" placeholder="Digite o seu nome" required></div>
+    <div>
+     
+    <input type="password" id="userPassword" placeholder="Digite a sua password" required>
+    </div>
+    <br>
+    <button type="submit">Entrar</button>
+  <br>
+  <br><br>
+  </form>
+  </div>
+
+  <script type="module">
+    // Import Firebase SDK
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+    import { getStorage, ref as storageRef, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDsP7lNqu-tDpJxpsyv8t1DW0M_u2EAE3o",
+      authDomain: "bartolomeu-cruz.firebaseapp.com",
+      databaseURL: "https://bartolomeu-cruz-default-rtdb.firebaseio.com",
+      projectId: "bartolomeu-cruz",
+      storageBucket: "bartolomeu-cruz.appspot.com",
+      messagingSenderId: "408863884951",
+      appId: "1:408863884951:web:13e8c2282139c1307dcbd2",
+      measurementId: "G-8TF4WLHKX3"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const storage = getStorage(app);
+
+    // Handle form submission
+    document.getElementById('loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const name = document.getElementById('userName').value.trim().toLowerCase(); // Normaliza o nome
+      const password = document.getElementById('userPassword').value;
+
+      // Referências para as duas pastas de gênero
+      const userRefMasculino = ref(database, 'masculino/' + name);
+      const userRefFeminino = ref(database, 'feminino/' + name);
+
+      // Função para verificar se o usuário existe em uma das pastas
+      const verifyUser = async (userRef) => {
+        const snapshot = await get(userRef);
+        if (snapshot.exists() && snapshot.val().password === password) {
+          return snapshot.val(); // Retorna os dados do usuário se encontrado
+        }
+        return null;
+      };
+
+      // Verificar nas duas pastas: masculino e feminino
+      let userData = await verifyUser(userRefMasculino);
+      if (!userData) {
+        userData = await verifyUser(userRefFeminino);
+      }
+
+      if (userData) {
+        alert('Usuário encontrado!');
+        localStorage.setItem('username', name); // Armazena o nome no localStorage
+
+        // Armazena a URL da foto de perfil no localStorage
+        if (userData.profileImageURL) {
+          localStorage.setItem('profilePic', userData.profileImageURL); // Armazena a URL da imagem de perfil
+        } else {
+          localStorage.setItem('profilePic', 'default_image_url'); // URL padrão caso não tenha imagem
+        }
+
+        window.location.href = 'home.html'; // Redireciona para home.html
+      } else {
+        alert('Usuário ou senha incorretos.');
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Liaison</title>
+  <style>
+    body {
+      background: #212121;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    section {
+      width: 100%;
+      height: 100vh;
+      overflow-y: auto;
+      border-radius: 8px;
+      background-color: #212121;
+      padding: 0;
+    }
+
+    #friendsSection {
+      display: flex;
+      flex-direction: column;
+      padding: 0px;
+    }
+
+    .friend-item {
+      display: flex;
+      align-items: center;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      background-color: #212121;
+      border: 2px solid #212121;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      transition: background-color 0.3s;
+      position: relative;
+    }
+
+    .friend-photo {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      background-color: #ccc;
+      position: relative;
+    }
+
+    .status-indicator {
+      position: absolute;
+      bottom: 5px;
+      left: 45px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid white;
+    }
+
+    .status-indicator.online {
+      background-color: green;
+    }
+
+    .status-indicator.offline {
+      background-color: gray;
+    }
+
+    .friend-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+
+    .badge {
+      background-color: red;
+      color: white;
+      border-radius: 50%;
+      padding: 4px 8px;
+      font-size: 12px;
+      margin-left: auto;
+      margin-right: 10px;
+    }
+
+    #chatSection {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+      background-color: #212121;
+    }
+
+    #chatHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 20px;
+      background-color: #212121;
+      color: white;
+      position: sticky;
+      top: 0;
+    }
+
+    #chatHeader img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    #messages {
+      flex-grow: 1;
+      padding: 10px;
+      overflow-y: auto;
+      /*fundo do chat*/
+      background-image: url(/images6.png);
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center;
+      height: 60vh;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 12px;
+      max-width: 55%;
+      margin-bottom: 15px;
+      word-wrap: break-word;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .sent {
+      background-image: linear-gradient(white,white);
+      align-self: flex-end;
+      color: #212121;
+      border-radius: 20px 20px 0px 20px;
+      margin-left: auto;
+      margin-bottom: 1rem;
+    }
+
+    .received {
+      background-image: linear-gradient(#212121, #212121);
+      color: white;
+      border-radius: 20px 20px 20px 0px;
+      margin-bottom: 1rem;
+      
+    }
+
+    .boxmensagem {
+      display: flex;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      padding: 0.5rem;
+      background-color: #212121;
+      border-top: 1px solid #333;
+    }
+
+    #messageInput {
+      border-radius: 20px 0px 20px 20px;
+      
+      border: 1px solid white;
+      font-size: 16px;
+      resize: none;
+      
+      margin-right: 10px;
+      outline: none;
+      width: 65%;
+      padding: 12px;
+      background: none;
+      height: auto;
+      color: white;
+    }
+
+    #sendButton img {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    #sendButton {
+      background: #212121;
+      border: white 1px solid;
+      cursor: pointer;
+      color: white;
+      width: 20%;
+      border-radius: 0px 20px 0px 20px;
+      
+    }
+    
+    header{
+  width: 100%;
+  height: auto;
+  padding: 1rem;
+  box-shadow: 0 0.1rem 0.5rem black;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+header img{
+  width: 6rem;
+  height: 2rem;
+}
+#profile-pic{
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border-radius: 50%;
+}
+#imagemHade{
+display: flex;
+
+margin-right: 2rem;
+}
+#imagemHade img{
+  width: 2rem;
+height: 2rem;
+border: 1px solid grey;
+background: #212121;
+border-radius: 50%;
+
+margin-left: 1rem;
+
+}
+.menu{
+  margin-top: 2rem;
+  display: flex;
+  
+  justify-content: space-between;
+}
+.menu img{
+  width: 2rem;
+  height: 2rem;
+  margin-left: 2rem;
+}
+.coler{
+  width: 6rem;
+  height: 10rem;
+  margin-left: 1rem;
+  border-radius: 20px;
+  border: 1px solid black;
+}
+.coler img{
+  width: 3rem;
+  height: 3rem;
+  
+  
+  margin-left: 1.5rem;
+}
+.blacker{
+  width: 100%;
+  margin-top: 17vh;
+border-bottom-right-radius: 20px;
+border-bottom-left-radius: 20px;
+  background: ;
+}
+
+
+
+
+
+
+
+
+#chatWithUsername{
+ position: fixed;
+ top: 3.30rem;
+ font-size: 12px;
+ font-weight: 600;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </style>
+</head>
+
+<body>
+
+  <section id="friendsSection">
+  <header>
+      <img src="laison2.png" id="logo" alt="Logo" />
+      
+      <div id="imagemHade" title="Publicar">
+          
+          
+          
+          
+          
+
+       
+      </div>
+      
+      <br />
+      <div class="menu">
+          <a href="liaison.html" id="a"><img src="home.png" alt="" /></a>
+          
+          <a href="home.html"><img src="amigos.png" alt="" /></a>
+          
+          <a href="filmes.html"><img src="video.png" alt="" /></a>
+          
+          
+          <a href="chat.html" id="a"><img src="mensagem.png" alt="" /></a>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="procurar.html"><img src="search.png" alt="" /></a>
+          
+      </div>
+  </header>
+
+
+
+    <h2 style="color:white;">        Amigos</h2>
+    <div id="friendsList"></div>
+  </section>
+
+  <section id="chatSection">
+   
+    <div id="chatHeader">
+      <img id="friendPhoto" src="img/user.png" alt="Foto do amigo" />
+      <span id="chatWithUsername">
+        
+        
+      </span>
+      
+      
+      <button onclick="goBack()" style="color: darkred; background: none;font-weight: 900;border: none"> Voltar</button></button>
+      
+      
+    </div>
+    <div id="messages"></div>
+    <div class="boxmensagem">
+     
+      <input id="messageInput" placeholder="Digite sua mensagem...">
+      <button id="sendButton">Send</button>
+    </div>
+  </section>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getDatabase, ref, get, set, push, onChildAdded, onDisconnect } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+    import { getStorage, ref as storageRef, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDsP7lNqu-tDpJxpsyv8t1DW0M_u2EAE3o",
+      authDomain: "bartolomeu-cruz.firebaseapp.com",
+      databaseURL: "https://bartolomeu-cruz-default-rtdb.firebaseio.com",
+      projectId: "bartolomeu-cruz",
+      storageBucket: "bartolomeu-cruz.appspot.com",
+      messagingSenderId: "408863884951",
+      appId: "1:408863884951:web:13e8c2282139c1307dcbd2",
+      measurementId: "G-8TF4WLHKX3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const storage = getStorage(app);
+
+    const loadFriends = async () => {
+      const currentUser = localStorage.getItem('username');
+      if (!currentUser) {
+        alert("Você precisa estar logado.");
+        return;
+      }
+
+      const friendsListDiv = document.getElementById('friendsList');
+      friendsListDiv.innerHTML = '';
+
+      const friendsRef = ref(database, `amigos/${currentUser}`);
+      const snapshot = await get(friendsRef);
+
+      if (snapshot.exists()) {
+        const friends = snapshot.val();
+
+        for (const friendUsername of Object.keys(friends)) {
+          const imageRef = storageRef(storage, 'profile_images/' + friendUsername);
+          let profileImageUrl = 'img/user.png';
+          try {
+            profileImageUrl = await getDownloadURL(imageRef);
+          } catch {}
+
+          const friendStatusRef = ref(database, `users/${friendUsername}/status`);
+          const friendStatusSnapshot = await get(friendStatusRef);
+          const status = friendStatusSnapshot.exists() ? friendStatusSnapshot.val() : 'offline';
+
+          const lastReadRef = ref(database, `users/${currentUser}/lastRead/${friendUsername}`);
+          const lastReadSnap = await get(lastReadRef);
+          const lastRead = lastReadSnap.exists() ? lastReadSnap.val() : 0;
+
+          const chatKey = [currentUser, friendUsername].sort().join('_');
+          const messagesRef = ref(database, `chats/${chatKey}/messages`);
+          const messagesSnap = await get(messagesRef);
+
+          let unreadCount = 0;
+          if (messagesSnap.exists()) {
+            const messages = messagesSnap.val();
+            Object.values(messages).forEach(msg => {
+              if (msg.sender === friendUsername && msg.timestamp > lastRead) {
+                unreadCount++;
+              }
+            });
+          }
+
+          const friendDiv = document.createElement('div');
+          friendDiv.classList.add('friend-item');
+          friendDiv.onclick = () => openChat(friendUsername, profileImageUrl);
+          friendDiv.innerHTML = `
+            <img src="${profileImageUrl}" class="friend-photo" />
+            <span class="friend-name">${friendUsername}</span>
+            <div class="status-indicator ${status}"></div>
+            ${unreadCount > 0 ? `<span class="badge">${unreadCount}</span>` : ''}
+          `;
+
+          friendsListDiv.appendChild(friendDiv);
+        }
+      } else {
+        friendsListDiv.innerHTML = "<p style='color:white;'>Você não tem amigos ainda.</p>";
+      }
+    };
+
+    window.openChat = async (friendUsername, profileImageUrl) => {
+      const currentUser = localStorage.getItem('username');
+      if (!currentUser) return;
+
+      const chatKey = [currentUser, friendUsername].sort().join('_');
+      const messagesRef = ref(database, `chats/${chatKey}/messages`);
+
+      document.getElementById('friendsSection').style.display = 'none';
+      document.getElementById('chatSection').style.display = 'flex';
+      document.getElementById('chatWithUsername').textContent = ` ${friendUsername}`;
+      document.getElementById('friendPhoto').src = profileImageUrl;
+
+      document.getElementById('messages').innerHTML = '';
+
+      // Marcar como lido
+      const lastReadRef = ref(database, `users/${currentUser}/lastRead/${friendUsername}`);
+      set(lastReadRef, Date.now());
+
+      onChildAdded(messagesRef, (data) => {
+        const message = data.val();
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', message.sender === currentUser ? 'sent' : 'received');
+        messageElement.textContent = message.text;
+        document.getElementById('messages').appendChild(messageElement);
+        document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+      });
+
+      document.getElementById('sendButton').onclick = async () => {
+        const messageInput = document.getElementById('messageInput');
+        const messageText = messageInput.value.trim();
+        if (!messageText) return;
+
+        const newMessageRef = push(messagesRef);
+        await set(newMessageRef, {
+          sender: currentUser,
+          text: messageText,
+          timestamp: Date.now()
+        });
+
+        messageInput.value = '';
+      };
+    };
+
+    window.goBack = () => {
+      document.getElementById('friendsSection').style.display = 'flex';
+      document.getElementById('chatSection').style.display = 'none';
+      loadFriends();
+    };
+
+    const setUserOnlineStatus = () => {
+      const currentUser = localStorage.getItem('username');
+      if (!currentUser) return;
+      const statusRef = ref(database, `users/${currentUser}/status`);
+      set(statusRef, 'online');
+      onDisconnect(statusRef).set('offline');
+    };
+
+    window.onload = () => {
+      loadFriends();
+      setUserOnlineStatus();
+    };
+  </script>
+</body>
+
+</html>

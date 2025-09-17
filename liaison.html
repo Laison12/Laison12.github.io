@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="liaison.css" type="text/css" media="all" />
+  <link rel="shortcut icon" href="liaison/laison.png" type="image/x-icon" />
+  <title>Liaison</title>
+  
+  <style>
+#a{
+  text-decoration: none;
+
+transition: border 0.3s ease;
+}
+/* Inicialmente o link não tem borda */
+a {
+  text-decoration: none;
+  
+  transition: border 0.3s ease;
+}
+
+/* Quando o link for clicado (ou seja, quando ele estiver no estado "ativo") */
+a:hover{
+ border-bottom: 3px solid #8B0000; 
+}
+a:active {
+  /* Cor vermelha escura */
+  border-bottom: 3px solid #8B0000;
+  
+}
+
+    
+  </style>
+</head>
+
+<body>
+
+  <header>
+<img src="laison2.png" id="logo" alt="Logo" />
+    
+    <div id="imagemHade" title="Publicar">
+      
+      
+      
+     
+     
+  <img id="profile-pic" src="profile.png" alt="Foto de Perfil" />
+     
+     
+     
+      <button onclick="showPostSection()" id="add" style="margin-left:10px;position: fixed;
+top: 90%; cursor:pointer; background:black;border-radius:8px; padding:8px 16px; color:white;">
+        +
+      </button>
+    </div>
+    
+    <br />
+   <div class="menu">
+   <a href="liaison.html" id="a"><img src="home.png" alt="" /></a>
+   
+<a href="home.html"><img src="amigos.png" alt="" /></a>
+  
+   <a href="filmes.html"><img src="video.png" alt="" /></a>
+   
+   
+   <a href="chat.html" id="a"><img src="mensagem.png" alt="" /></a>
+   
+   
+   
+   
+   
+
+   
+   
+   
+
+   <a href="procurar.html"><img src="search.png" alt="" /></a>
+
+   </div>
+  </header>
+<br /><br /><br />
+<br /><br /><br />
+<br /><br /><br />
+  <!-- Modal de publicação -->
+  <section id="postSection">
+    <div class="post-box">
+      <textarea id="postText" placeholder="Escreva algo..." maxlength="300"></textarea>
+
+      <div class="file-inputs">
+        <label for="postImage" class="file-label">📷 Imagem
+          <input type="file" id="postImage" accept="image/*" />
+        </label>
+
+        <label for="postVideo" class="file-label">🎥 Vídeo
+          <input type="file" id="postVideo" accept="video/*" />
+        </label>
+      </div>
+
+      <small style="color:#aaa;">
+        Você pode postar: <strong>Texto + Imagem</strong> ou <strong>Vídeo + Texto</strong>.<br />
+        O vídeo deve ter no mínimo 10 segundos (se maior será cortado para 10s). Só é permitido um vídeo por usuário.
+      </small>
+
+      <button onclick="submitPost()">Publicar</button>
+      <button class="cancel" onclick="hidePostSection()">Cancelar</button>
+    </div>
+  </section>
+
+  <!-- Feed de publicações -->
+  <main id="feed"></main>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import {
+      getDatabase,
+      ref,
+      push,
+      set,
+      onChildAdded,
+      get,
+      child,
+      update
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+    import {
+      getStorage,
+      ref as storageRef,
+      uploadBytes,
+      getDownloadURL
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDsP7lNqu-tDpJxpsyv8t1DW0M_u2EAE3o",
+      authDomain: "bartolomeu-cruz.firebaseapp.com",
+      databaseURL: "https://bartolomeu-cruz-default-rtdb.firebaseio.com",
+      projectId: "bartolomeu-cruz",
+      storageBucket: "bartolomeu-cruz.appspot.com",
+      messagingSenderId: "408863884951",
+      appId: "1:408863884951:web:13e8c2282139c1307dcbd2",
+      measurementId: "G-8TF4WLHKX3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const storage = getStorage(app);
+    const postsRef = ref(database, 'posts');
+
+    // Dados do usuário (normalmente viria do login)
+    const user = localStorage.getItem('username') || 'Anônimo';
+    const profilePic = localStorage.getItem('profilePic') || 'img/default-profile.png';
+
+    document.getElementById("profile-pic").src = profilePic;
+
+    // Mostrar e esconder modal publicação
+    function showPostSection() {
+      document.getElementById('postSection').classList.add('active');
+      clearPostInputs();
+    }
+
+    function hidePostSection() {
+      document.getElementById('postSection').classList.remove('active');
+      clearPostInputs();
+    }
+
+    function clearPostInputs() {
+      document.getElementById('postText').value = "";
+      document.getElementById('postImage').value = "";
+      document.getElementById('postVideo').value = "";
+    }
+
+    window.showPostSection = showPostSection;
+    window.hidePostSection = hidePostSection;
+
+    // Helper para cortar vídeo para 10s usando canvas (ou alertar se muito curto)
+    async function processVideoFile(file) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+
+        video.onloadedmetadata = () => {
+          if (video.duration < 10) {
+            reject("O vídeo deve ter no mínimo 10 segundos.");
+            URL.revokeObjectURL(url);
+            return;
+          }
+
+          // Se vídeo maior que 10s, vamos cortar (simplemente pega primeiros 10s)
+          // Porém, cortar vídeo no client side é complexo, para não expandir aqui, vamos apenas aceitar vídeos >= 10s e enviar como está
+          // Um recorte real precisaria ffmpeg.js ou backend.
+
+          resolve(file);
+          URL.revokeObjectURL(url);
+        };
+
+        video.onerror = () => {
+          reject("Erro ao carregar o vídeo.");
+          URL.revokeObjectURL(url);
+        };
+
+        video.src = url;
+      });
+    }
+
+    // Função para verificar se usuário já tem vídeo postado
+    async function userHasVideoPost() {
+      const snapshot = await get(postsRef);
+      if (!snapshot.exists()) return false;
+
+      const posts = snapshot.val();
+      for (const id in posts) {
+        const post = posts[id];
+        if (post.user === user && post.videoUrl) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // Função para enviar o post
+    async function submitPost() {
+      const text = document.getElementById('postText').value.trim();
+      const imageFile = document.getElementById('postImage').files[0];
+      const videoFile = document.getElementById('postVideo').files[0];
+
+      // Validações básicas:
+      if (!text) {
+        alert("O texto da publicação é obrigatório.");
+        return;
+      }
+
+      if (imageFile && videoFile) {
+        alert("Você só pode enviar vídeo + texto ou texto + imagem, não ambos.");
+        return;
+      }
+
+      if (!imageFile && !videoFile) {
+        alert("Você deve enviar um vídeo ou uma imagem junto com o texto.");
+        return;
+      }
+
+      // Se for vídeo, validar duração e se usuário já postou vídeo antes
+      if (videoFile) {
+        const hasVideo = await userHasVideoPost();
+        if (hasVideo) {
+          alert("Você já publicou um vídeo. Só é permitido um vídeo por usuário.");
+          return;
+        }
+
+        try {
+          await processVideoFile(videoFile);
+          // Vídeo ok
+        } catch (err) {
+          alert(err);
+          return;
+        }
+      }
+
+      // Gerar id do post
+      const newPostKey = push(postsRef).key;
+
+      let imageUrl = "";
+      let videoUrl = "";
+
+      // Upload arquivos
+      if (imageFile) {
+        const imgRef = storageRef(storage, `post_images/${newPostKey}`);
+        await uploadBytes(imgRef, imageFile);
+        imageUrl = await getDownloadURL(imgRef);
+      }
+
+      if (videoFile) {
+        const vidRef = storageRef(storage, `post_videos/${newPostKey}`);
+        await uploadBytes(vidRef, videoFile);
+        videoUrl = await getDownloadURL(vidRef);
+      }
+
+      // Dados do post
+      const postData = {
+        id: newPostKey,
+        user: user,
+        profilePic: profilePic,
+        text: text,
+        imageUrl: imageUrl || null,
+        videoUrl: videoUrl || null,
+        likes: 0,
+        likedBy: {},
+        comments: {},
+        createdAt: Date.now()
+      };
+
+      // Salvar no Firebase
+      await set(ref(database, `posts/${newPostKey}`), postData);
+
+      hidePostSection();
+    }
+
+    window.submitPost = submitPost;
+
+    // FUNÇÃO PARA CARREGAR POSTS E EXIBIR
+    const feedEl = document.getElementById('feed');
+
+    function createPostElement(post) {
+      const postEl = document.createElement('article');
+      postEl.className = 'post';
+      postEl.dataset.postId = post.id;
+
+      // Cabeçalho com foto e nome
+      const headerHTML = `
+        <div class="post-header">
+          <img src="${post.profilePic}" alt="${post.user}"/>
+          <strong>${post.user}</strong>
+        </div>
+      `;
+
+      // Conteúdo texto
+      const textHTML = `<div class="post-text">${escapeHtml(post.text)}</div>`;
+
+      // Conteúdo mídia
+      let mediaHTML = '';
+      if (post.imageUrl) {
+        mediaHTML = `<div class="post-media"><img src="${post.imageUrl}" alt="Imagem da publicação" /></div>`;
+      } else if (post.videoUrl) {
+        mediaHTML = `<div class="post-media"><video src="${post.videoUrl}" controls preload="metadata" playsinline></video></div>`;
+      }
+
+      // Likes e comentários
+      const actionsHTML = `
+        <div class="post-actions">
+          <div class="like-btn" title="Curtir">
+            <img src="https://cdn-icons-png.flaticon.com/512/833/833472.png" alt="Like" />
+            <span class="like-count">${post.likes || 0}</span>
+          </div>
+          <div class="comments-btn" title="Comentários">
+            💬 <span class="comments-count">${post.comments ? Object.keys(post.comments).length : 0}</span>
+          </div>
+        </div>
+      `;
+
+      // Seção de comentários escondida inicialmente
+      const commentsHTML = `<div class="comments-section" style="display:none;"></div>`;
+
+      postEl.innerHTML = headerHTML + textHTML + mediaHTML + actionsHTML + commentsHTML;
+
+      // Adicionar eventos
+      const likeBtn = postEl.querySelector('.like-btn');
+      likeBtn.addEventListener('click', () => toggleLike(post.id, likeBtn));
+
+      const commentsBtn = postEl.querySelector('.comments-btn');
+      commentsBtn.addEventListener('click', () => toggleComments(post.id, postEl));
+
+      return postEl;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Carregar posts existentes
+    async function loadPosts() {
+      const snapshot = await get(postsRef);
+      if (!snapshot.exists()) {
+        feedEl.innerHTML = "<p style='text-align:center; color:#777;'>Nenhuma publicação ainda.</p>";
+        return;
+      }
+
+      const posts = snapshot.val();
+
+      // Limpar feed
+      feedEl.innerHTML = '';
+
+      // Ordenar posts por data decrescente
+      const postsArray = Object.values(posts).sort((a, b) => b.createdAt - a.createdAt);
+
+      for (const post of postsArray) {
+        const postEl = createPostElement(post);
+        feedEl.appendChild(postEl);
+      }
+    }
+
+    // Atualizar feed sempre que um novo post for adicionado
+    onChildAdded(postsRef, (data) => {
+      loadPosts();
+    });
+
+    // Toggle like
+    async function toggleLike(postId, likeBtn) {
+      const postRef = ref(database, `posts/${postId}`);
+
+      const snapshot = await get(postRef);
+      if (!snapshot.exists()) return;
+
+      const post = snapshot.val();
+
+      if (!post.likedBy) post.likedBy = {};
+      const likedBy = post.likedBy;
+
+      const isLiked = likedBy[user];
+      if (isLiked) {
+        delete likedBy[user];
+        post.likes = Math.max(0, (post.likes || 1) - 1);
+        likeBtn.classList.remove('liked');
+      } else {
+        likedBy[user] = true;
+        post.likes = (post.likes || 0) + 1;
+        likeBtn.classList.add('liked');
+      }
+
+      await update(postRef, {
+        likedBy: likedBy,
+        likes: post.likes
+      });
+
+      // Atualizar contagem visual
+      likeBtn.querySelector('.like-count').textContent = post.likes;
+    }
+
+    // Toggle comentários (mostrar/esconder)
+    async function toggleComments(postId, postEl) {
+      const commentsSection = postEl.querySelector('.comments-section');
+      if (commentsSection.style.display === 'none') {
+        // Mostrar
+        commentsSection.style.display = 'block';
+        loadComments(postId, commentsSection);
+      } else {
+        // Esconder
+        commentsSection.style.display = 'none';
+        commentsSection.innerHTML = '';
+      }
+    }
+
+    // Carregar comentários do post
+    async function loadComments(postId, container) {
+      container.innerHTML = '';
+
+      const commentsRef = ref(database, `posts/${postId}/comments`);
+      const snapshot = await get(commentsRef);
+
+      // Form para adicionar comentário novo
+      const commentForm = document.createElement('div');
+      commentForm.style.marginBottom = '10px';
+      commentForm.innerHTML = `
+        <input type="text" placeholder="Escreva um comentário..." style="width:80%; padding:6px; border-radius:8px; border:none; background:#444; color:white;" id="newCommentInput" />
+        <button style="padding:6px 10px; border:none; border-radius:8px; background:#f44336; color:white; cursor:pointer;">Enviar</button>
+      `;
+      container.appendChild(commentForm);
+
+      const input = commentForm.querySelector('input');
+      const btn = commentForm.querySelector('button');
+
+      btn.addEventListener('click', async () => {
+        const text = input.value.trim();
+        if (!text) return alert("Comentário vazio!");
+
+        const newCommentKey = push(ref(database, `posts/${postId}/comments`)).key;
+
+        const commentData = {
+          id: newCommentKey,
+          user: user,
+          profilePic: profilePic,
+          text: text,
+          createdAt: Date.now(),
+          reactions: {},
+          replies: {}
+        };
+
+        await set(ref(database, `posts/${postId}/comments/${newCommentKey}`), commentData);
+        input.value = "";
+
+        loadComments(postId, container);
+      });
+
+      if (!snapshot.exists()) return;
+
+      const comments = snapshot.val();
+
+      // Ordenar por data crescente
+      const commentsArray = Object.values(comments).sort((a, b) => a.createdAt - b.createdAt);
+
+      for (const comment of commentsArray) {
+        const commentEl = createCommentElement(postId, comment);
+        container.appendChild(commentEl);
+      }
+    }
+
+    // Criar elemento comentário com possibilidade de resposta e reação
+    function createCommentElement(postId, comment) {
+      const el = document.createElement('div');
+      el.className = 'comment';
+
+      const header = document.createElement('div');
+      header.className = 'comment-header';
+      header.innerHTML = `
+        <strong>${escapeHtml(comment.user)}</strong>
+        <span>${new Date(comment.createdAt).toLocaleString()}</span>
+      `;
+
+      const text = document.createElement('div');
+      text.className = 'comment-text';
+      text.textContent = comment.text;
+
+      const actions = document.createElement('div');
+      actions.style.marginTop = '6px';
+
+      const replyBtn = document.createElement('span');
+      replyBtn.className = 'reply-btn';
+      replyBtn.textContent = 'Responder';
+
+      const reactBtn = document.createElement('span');
+      reactBtn.className = 'react-btn';
+      reactBtn.textContent = '❤️';
+
+      actions.appendChild(replyBtn);
+      actions.appendChild(reactBtn);
+
+      el.appendChild(header);
+      el.appendChild(text);
+      el.appendChild(actions);
+
+      // Área para respostas
+      const repliesContainer = document.createElement('div');
+      repliesContainer.className = 'replies';
+      el.appendChild(repliesContainer);
+
+      // Mostrar respostas existentes
+      if (comment.replies) {
+        const repliesArray = Object.values(comment.replies).sort((a, b) => a.createdAt - b.createdAt);
+        for (const reply of repliesArray) {
+          const replyEl = document.createElement('div');
+          replyEl.className = 'reply';
+          replyEl.innerHTML = `<strong>${escapeHtml(reply.user)}</strong>: ${escapeHtml(reply.text)}`;
+          repliesContainer.appendChild(replyEl);
+        }
+      }
+
+      // Evento responder
+      replyBtn.addEventListener('click', () => {
+        // Evitar abrir múltiplos inputs
+        if (el.querySelector('.reply-input')) return;
+
+        const replyInputDiv = document.createElement('div');
+        replyInputDiv.className = 'reply-input';
+
+        replyInputDiv.innerHTML = `
+          <input type="text" placeholder="Escreva sua resposta..." />
+          <button>Enviar</button>
+        `;
+
+        el.appendChild(replyInputDiv);
+
+        const input = replyInputDiv.querySelector('input');
+        const button = replyInputDiv.querySelector('button');
+
+        button.addEventListener('click', async () => {
+          const text = input.value.trim();
+          if (!text) return alert("Resposta vazia!");
+
+          const newReplyKey = push(ref(database, `posts/${postId}/comments/${comment.id}/replies`)).key;
+
+          const replyData = {
+            id: newReplyKey,
+            user: user,
+            text: text,
+            createdAt: Date.now()
+          };
+
+          await set(ref(database, `posts/${postId}/comments/${comment.id}/replies/${newReplyKey}`), replyData);
+
+          // Atualiza lista
+          loadComments(postId, el.closest('.comments-section'));
+
+          // Remove input
+          replyInputDiv.remove();
+        });
+      });
+
+      // Evento reação (exemplo: só toggle "curtir" reação coração)
+      reactBtn.addEventListener('click', async () => {
+        const reactionPath = `posts/${postId}/comments/${comment.id}/reactions/${user}`;
+        const reactionRef = ref(database, reactionPath);
+
+        const reactionSnapshot = await get(reactionRef);
+        if (reactionSnapshot.exists()) {
+          // Remove reação
+          await set(reactionRef, null);
+          reactBtn.style.color = '#bbb';
+        } else {
+          // Adiciona reação
+          await set(reactionRef, true);
+          reactBtn.style.color = '#f44336';
+        }
+      });
+
+      // Inicializa cor do botão de reação
+      (async () => {
+        const reactionSnapshot = await get(ref(database, `posts/${postId}/comments/${comment.id}/reactions/${user}`));
+        if (reactionSnapshot.exists()) {
+          reactBtn.style.color = '#f44336';
+        }
+      })();
+
+      return el;
+    }
+
+    // Inicializa feed
+    loadPosts();
+
+  </script>
+</body>
+
+</html>

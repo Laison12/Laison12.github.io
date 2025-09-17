@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      display: block;
+      background: black;
+    }
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      color: white;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Score: 0</div>
+  <canvas id="game"></canvas>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const grid = 20;
+    let snake = [{ x: 160, y: 160 }];
+    let dx = grid;
+    let dy = 0;
+    let food = { x: 320, y: 320 };
+    let score = 0;
+    let speed = 150; // milissegundos entre movimentos (quanto maior, mais lento)
+
+    function randomFood() {
+      return {
+        x: Math.floor(Math.random() * (canvas.width / grid)) * grid,
+        y: Math.floor(Math.random() * (canvas.height / grid)) * grid
+      };
+    }
+
+    function gameLoop() {
+      // Move cabeça
+      const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+      snake.unshift(head);
+
+      // Comer comida
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        document.getElementById("score").innerText = "Score: " + score;
+        food = randomFood();
+
+        // Aumenta dificuldade (fica mais rápido a cada 5 pontos)
+        if (score % 5 === 0 && speed > 50) {
+          clearInterval(loop);
+          speed -= 10;
+          loop = setInterval(gameLoop, speed);
+        }
+      } else {
+        snake.pop();
+      }
+
+      // Limpa tela
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Desenha comida
+      ctx.fillStyle = "white";
+      ctx.fillRect(food.x, food.y, grid - 2, grid - 2);
+
+      // Desenha cobra
+      ctx.fillStyle = "white";
+      snake.forEach(part => ctx.fillRect(part.x, part.y, grid - 2, grid - 2));
+
+      // Colisões
+      if (
+        head.x < 0 || head.y < 0 ||
+        head.x >= canvas.width || head.y >= canvas.height ||
+        snake.slice(1).some(p => p.x === head.x && p.y === head.y)
+      ) {
+        alert("Game Over! Score: " + score);
+        resetGame();
+      }
+    }
+
+    function resetGame() {
+      snake = [{ x: 160, y: 160 }];
+      dx = grid;
+      dy = 0;
+      score = 0;
+      speed = 150;
+      document.getElementById("score").innerText = "Score: 0";
+      clearInterval(loop);
+      loop = setInterval(gameLoop, speed);
+    }
+
+    // Controles teclado
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft" && dx === 0) { dx = -grid; dy = 0; }
+      else if (e.key === "ArrowUp" && dy === 0) { dx = 0; dy = -grid; }
+      else if (e.key === "ArrowRight" && dx === 0) { dx = grid; dy = 0; }
+      else if (e.key === "ArrowDown" && dy === 0) { dx = 0; dy = grid; }
+    });
+
+    // Controles toque (swipe)
+    let startX, startY;
+    document.addEventListener("touchstart", e => {
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+    });
+
+    document.addEventListener("touchend", e => {
+      const touch = e.changedTouches[0];
+      const diffX = touch.clientX - startX;
+      const diffY = touch.clientY - startY;
+
+      if (Math.abs(diffX) > Math.abs(diffY)) {
+        if (diffX > 0 && dx === 0) { dx = grid; dy = 0; }
+        else if (diffX < 0 && dx === 0) { dx = -grid; dy = 0; }
+      } else {
+        if (diffY > 0 && dy === 0) { dx = 0; dy = grid; }
+        else if (diffY < 0 && dy === 0) { dx = 0; dy = -grid; }
+      }
+    });
+
+    // Inicia jogo
+    let loop = setInterval(gameLoop, speed);
+  </script>
+</body>
+</html>
