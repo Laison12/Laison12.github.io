@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laison</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
+<style>
+body{margin:0;padding:0;font-family:sans-serif;background:#212121;color:white;}
+#map{height:70vh;width:100%;}
+#info{padding:10px;text-align:center;}
+#searchContainer{display:flex;justify-content:center;margin:10px;}
+#searchContainer input{padding:10px;width:50%;border-radius:5px;border:none;
+  outline: none;
+}
+#searchContainer button{padding:10px 15px;border:none;border-radius:5px;background:darkred;color:white;cursor:pointer;margin-left:5px;transition:0.3s;}
+#searchContainer button:hover{background:darkred;}
+header{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0.5rem 1rem;
+  font-weight:900;
+  background:#1e1e1e;
+}
+header img{
+  width:2rem;
+  height:2rem;
+  border-radius:20px;
+}
+header a{
+  color:white;
+  text-decoration:none;
+  margin-left:1rem;
+  padding:0.2rem 0.5rem;
+  border-radius:5px;
+  transition:0.2s;
+}
+header a:hover{
+  background:#ff4d4d;
+  color:white;
+}
+
+</style>
+</head>
+<body>
+<header>
+  <img src="icon512.png" alt="LIA"/>
+<a href="laison.html"><span>Laison</span></a>
+  <a href="musica.html">Músicas</a>
+  <a href="liaison.html">Home</a>
+
+</header>
+
+<div id="searchContainer">
+  <input type="text" id="placeQuery" placeholder="Digite um lugar ou endereço">
+  <button onclick="searchPlace()">Pesquisar</button>
+  <button onclick="getLocation()">Minha Localização</button>
+</div>
+
+<div id="info">Use o mapa, pesquise um lugar e veja a rota que deseja.</div>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
+
+<script>
+let map = L.map('map').setView([0,0],2);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+
+let userMarker=null;
+let searchMarker=null;
+let routeControl=null;
+let userLat=null;
+let userLon=null;
+
+// Obter localização do usuário
+function getLocation(){
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(async (pos)=>{
+      userLat = pos.coords.latitude;
+      userLon = pos.coords.longitude;
+      map.setView([userLat,userLon],13);
+      if(userMarker) userMarker.setLatLng([userLat,userLon]);
+      else userMarker = L.marker([userLat,userLon]).addTo(map).bindPopup("Você está aqui").openPopup();
+      document.getElementById("info").innerHTML = `Você está em: Lat ${userLat.toFixed(5)}, Lon ${userLon.toFixed(5)}`;
+    },()=>alert("Não foi possível obter sua localização."));
+  }else{
+    alert("Geolocalização não suportada.");
+  }
+}
+
+// Pesquisar lugar
+async function searchPlace(){
+  const query = document.getElementById("placeQuery").value.trim();
+  if(!query){alert("Digite um lugar."); return;}
+  try{
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`);
+    const data = await res.json();
+    if(data.length === 0){alert("Lugar não encontrado."); return;}
+    const place = data[0];
+    const lat = parseFloat(place.lat);
+    const lon = parseFloat(place.lon);
+
+    map.setView([lat,lon],13);
+    if(searchMarker) searchMarker.setLatLng([lat,lon]);
+    else searchMarker = L.marker([lat,lon],{icon:L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/684/684908.png',iconSize:[30,30]})}).addTo(map).bindPopup(place.display_name).openPopup();
+    
+    document.getElementById("info").innerHTML = `Encontrado: ${place.display_name} <br>Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}`;
+
+    // Traçar rota se usuário estiver definido
+    if(userLat!==null && userLon!==null){
+      if(routeControl) map.removeControl(routeControl);
+      routeControl = L.Routing.control({
+        waypoints: [
+          L.latLng(userLat, userLon),
+          L.latLng(lat, lon)
+        ],
+        routeWhileDragging: false,
+        draggableWaypoints: false,
+        addWaypoints: false
+      }).addTo(map);
+    }
+
+  }catch(err){
+    alert("Erro na busca.");
+    console.error(err);
+  }
+}
+</script>
+</body>
+</html>
